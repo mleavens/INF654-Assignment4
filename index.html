@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Destination List</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <h1>Travel Destination List</h1>
+    <div class="content">
+        <form id="add-destination-form">
+            <input type="text" name="country" placeholder="Country">
+            <input type="text" name="city" placeholder="City">
+            <button>Add Destination</button>
+        </form>
+        <ul id="destination-list"></ul>
+    </div>
+
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.2.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, addDoc, doc, deleteDoc, query, where, updateDoc } from "https://www.gstatic.com/firebasejs/9.2.0/firebase-firestore.js";
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDn0kHP5aMwFczOjbO_5sWvi-B6uVQxkNk",
+            authDomain: "restaurants-e329b.firebaseapp.com",
+            projectId: "restaurants-e329b",
+            storageBucket: "restaurants-e329b.appspot.com",
+            messagingSenderId: "916587763746",
+            appId: "1:916587763746:web:ccba1ddc71053f36d3d27b"
+};
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        async function getDestinations(db) {
+            const destinationsCol = collection(db, "destination");
+            const destinationSnapshot = await getDocs(destinationsCol);
+            const destinationList = destinationSnapshot.docs.map((doc) => doc.data());
+            return destinationList;
+        };
+
+
+        const destinationList = document.querySelector('#destination-list');
+        const form = document.querySelector('#add-destination-form')
+
+        function renderDestination(dc) {
+            let li = document.createElement("li");
+            let country = document.createElement("span");
+            let city = document.createElement("span");
+            let cross = document.createElement('div');
+
+            li.setAttribute('data-id', dc.id);
+            country.textContent = dc.data().country;
+            city.textContent = dc.data().city;
+            cross.textContent = 'x';
+
+            li.appendChild(country);
+            li.appendChild(city);
+            li.appendChild(cross);
+
+            destinationList.appendChild(li);
+
+            cross.addEventListener('click', (e) => {
+                e.stopPropagation();
+                let id = e.target.parentElement.getAttribute('data-id');
+                deleteDoc(doc(db, "destination", id))
+            })
+        }
+
+        const destinations = getDocs(collection(db, "destination")).then((snapshot) => {
+            snapshot.forEach((doc) => {
+                renderDestination(doc)
+            })
+        })
+
+        const q = query(collection(db, "destination"), where("city", "==", "boston"));
+        const querySnapshot = await getDocs(q);
+        querySnapshot.forEach((doc) => {
+            console.log(doc.id, "=>", doc.data())
+        })
+
+        const upDoc = doc(db, "destination", "LWz2455LbVry7jNRaxLQ");
+
+        updateDoc(upDoc, {
+            country: "USA"
+        })
+
+        form.addEventListener(('submit'), (e) => {
+            e.preventDefault();
+            const docRef = addDoc(collection(db, "destination"), {
+                city: form.city.value,
+                country: form.country.value
+            })
+        })
+    </script>
+    <script src="app.js"></script>
+</body>
+
+</html>
